@@ -108,6 +108,7 @@ always @(posedge clk_500ms or negedge reset) begin
 		if (snake[0][5:0] == apple[5:0]) begin
 			score = score + 1;
 			// graw the snake
+			// TODO:
 
 			// gen apple - use cnt_scan as random source
 			if (random == 8'b0) begin
@@ -153,34 +154,34 @@ always @(cnt_scan[15:13]) begin
 	led_scanout = cnt_scan[15:13];
 	case (led_scanout < 3 ? (timer[15:1] % (15'd10 * (3 - led_scanout))) : (score % (15'd10 * (6 - led_scanout))))
 		4'd0: begin
-			led_segout = 8'b00111111;
+			led_segout = 8'b11111100;
 		end
 		4'd1: begin
-			led_segout = 8'b00000110;
+			led_segout = 8'b01100000;
 		end
 		4'd2: begin
-			led_segout = 8'b01011011;
+			led_segout = 8'b11011010;
 		end
 		4'd3: begin
-			led_segout = 8'b01001111;
+			led_segout = 8'b11110010;
 		end
 		4'd4: begin
 			led_segout = 8'b01100110;
 		end
 		4'd5: begin
-			led_segout = 8'b01101101;
+			led_segout = 8'b10110110;
 		end
 		4'd6: begin
-			led_segout = 8'b01111101;
+			led_segout = 8'b10111110;
 		end
 		4'd7: begin
-			led_segout = 8'b00000111;
+			led_segout = 8'b11100000;
 		end
 		4'd8: begin
-			led_segout = 8'b01111111;
+			led_segout = 8'b11111110;
 		end
 		4'd9: begin
-			led_segout = 8'b01101111;
+			led_segout = 8'b11110110;
 		end
 		default: begin
 			led_segout = 8'b00000000;  // blank

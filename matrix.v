@@ -196,12 +196,17 @@ end
 
 always @(cnt_scan[15:13]) begin
 	// led
-	led_scanout = cnt_scan[15:13];
-	led_segout = led_pattern[
-		led_scanout < 3
-		? (timer[15:1] % (15'd10 ** (3 - led_scanout)))
-		: (score % (15'd10 ** (6 - led_scanout)))
-	];
+	if (cnt_scan[15:13] < 3'd6) begin
+		led_scanout = cnt_scan[15:13];
+		led_segout = led_pattern[
+			led_scanout < 3
+			? ((timer[15:1] / (15'd10 ** (2 - led_scanout))) % 10)
+			: ((score / (15'd10 ** (5 - led_scanout))) % 10)
+		];
+	end else begin
+		led_scanout = 3'b0;
+		led_segout = 8'b0;
+	end
 
 	row = cnt_scan[15:13];
 	matrix_scanout = 8'b00000001 << row;

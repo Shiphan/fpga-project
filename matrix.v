@@ -25,11 +25,11 @@ reg [15:0] score;
 
 reg [1:0] arrow;
 reg [1:0] dire;
-reg [6:0] snake [63:0];
+reg [5:0] snake [63:0];
 reg [7:0] snake_on_map [7:0];
 reg [7:0] snake_length;
-reg [7:0] random;
 
+reg [7:0] random;
 reg [5:0] apple;
 
 reg [25:0] cnt_scan = 0;
@@ -38,10 +38,17 @@ reg [2:0] row;
 
 reg [7:0] led_pattern [9:0];
 
+reg [7:0] i;
+
 initial begin
-	snake[0] = 7'b1_000_000;
-	apple = 6'b011_100;  // initial apple at row 3, column 4
+	timer = 16'd0;
+	score = 16'd0;
+	arrow = 2'd0;
+	dire= 2'd0;
+	snake[0] = 6'b000_000;
+	snake_length = 8'd1;
 	random = 8'd234;
+	apple = 6'b011_100;  // initial apple at row 3, column 4
 
 	led_pattern[0] = 8'b11111100;
 	led_pattern[1] = 8'b01100000;
@@ -66,77 +73,102 @@ end
 reg[7:0] random_a;
 always @(posedge clk_500ms or negedge reset) begin
 	if (!reset) begin
-		snake[0] = 7'b1_000_000;
-		dire = 2'd0;
-		timer = 0;
-		score = 0;
-		// TODO: reset
+		timer = 16'd0;
+		score = 16'd0;
+		dire= 2'd0;
+		snake[0] = 6'b000_000;
+		snake_length = 8'd1;
+		random = 8'd234;
+		apple = 6'b011_100;  // initial apple at row 3, column 4
 	end else begin
 		timer = timer + 16'd01;
 		// 500ms
+
+		// move body
+		for (i = 63; i > 0; i = i - 1) begin
+			snake[i] = snake[i - 1];
+		end
+
+		// move head
 		dire = arrow;
 		case (arrow)
 			2'd0: begin
 				if (snake[0][5:3] == 0) begin
-					snake[0] = snake[0] | 7'b0_111_000;
+					snake[0] = snake[0] | 6'b111_000;
 				end else begin
-					snake[0] = snake[0] - 7'b0_001_000; // up
+					snake[0] = snake[0] - 6'b001_000; // up
 				end
 			end
 			2'd1: begin
 				if (snake[0][5:3] == 7) begin
-					snake[0] = snake[0] & 7'b1_000_111;
+					snake[0] = snake[0] & 6'b000_111;
 				end else begin
-					snake[0] = snake[0] + 7'b0_001_000; // down
+					snake[0] = snake[0] + 6'b001_000; // down
 				end
 			end
 			2'd2: begin
 				if (snake[0][2:0] == 0) begin
-					snake[0] = snake[0] | 7'b0_000_111;
+					snake[0] = snake[0] | 6'b000_111;
 				end else begin
-					snake[0] = snake[0] - 7'b01; // left
+					snake[0] = snake[0] - 6'b01; // left
 				end
 			end
 			2'd3: begin
 				if (snake[0][2:0] == 7) begin
-					snake[0] = snake[0] & 7'b1_111_000;
+					snake[0] = snake[0] & 6'b111_000;
 				end else begin
-					snake[0] = snake[0] + 7'b01; // right
+					snake[0] = snake[0] + 6'b01; // right
 				end
 			end
 		endcase
 
-		// reset snake_on_map & snake_length
+		// reset snake_on_map
 		for (i = 0; i < 8; i = i + 1) begin
 			snake_on_map[i] = 8'b0;
 		end
-		snake_length = 0;
 
-		for (i = 0; i < 64; i = i + 1) begin
-			if (snake[i][6] == 1'b1) begin
+		for (i = 1; i < 64; i = i + 1) begin
+			if (i < snake_length) begin
 				snake_on_map[snake[i][5:3]] = snake_on_map[snake[i][5:3]] | 8'b00000001 << snake[i][2:0];
-				snake_length = snake_length + 1;
 			end
 		end
+		// check if head is on the body
+		if (snake_on_map[snake[0][5:3]] & 8'b00000001 << snake[0][2:0] != 8'b0) begin
+			// the snake's head hit body
+			// TODO: i just reset everything for now, maybe we can
+			// add some cool effect and then reset
 
-		if (snake[0][5:0] == apple[5:0]) begin
-			score = score + 1;
-			// graw the snake
-			// TODO:
+			timer = 16'd0;
+			score = 16'd0;
+			dire= 2'd0;
+			snake[0] = 6'b000_000;
+			snake_length = 8'd1;
+			random = 8'd234;
+			apple = 6'b011_100;
+		end else begin
+			snake_on_map[snake[0][5:3]] = snake_on_map[snake[0][5:3]] | 8'b00000001 << snake[0][2:0];
 
-			// gen apple - use cnt_scan as random source
-			if (random == 8'b0) begin
-				random = 8'd234;
-			end
-			random = random ^ (random << 12) ^ (random >> 7) ^ (random << 3);
-			random_a = random % (64 - snake_length) + 1;
+			if (snake[0][5:0] == apple[5:0]) begin
+				score = score + 1;
 
-			for (i = 0; i < 64; i = i + 1) begin
-				if (random_a != 8'b0 && (snake_on_map[i / 8] & 8'b01 << (i % 8)) == 8'b0) begin
-					random_a = random_a - 1;
-					if (random_a == 8'b0) begin
-						apple[5:3] = i / 8;   // random row (0-7)
-						apple[2:0] = i % 8;  // random column (0-7)
+				// graw the snake
+				snake_length = snake_length + 1;
+				snake_on_map[snake[snake_length - 1][5:3]] = snake_on_map[snake[snake_length - 1][5:3]] | 8'b00000001 << snake[snake_length - 1][2:0];
+
+				// gen apple
+				if (random == 8'b0) begin
+					random = 8'd234;
+				end
+				random = random ^ (random << 12) ^ (random >> 7) ^ (random << 3);
+				random_a = random % (64 - snake_length) + 1;
+
+				for (i = 0; i < 64; i = i + 1) begin
+					if (random_a != 8'b0 && (snake_on_map[i / 8] & 8'b01 << (i % 8)) == 8'b0) begin
+						random_a = random_a - 1;
+						if (random_a == 8'b0) begin
+							apple[5:3] = i / 8;  // random row (0-7)
+							apple[2:0] = i % 8;  // random column (0-7)
+						end
 					end
 				end
 			end
@@ -162,14 +194,13 @@ always @(negedge reset or negedge arrow_up or negedge arrow_down or posedge arro
 	end
 end
 
-reg [7:0] i;
 always @(cnt_scan[15:13]) begin
 	// led
 	led_scanout = cnt_scan[15:13];
 	led_segout = led_pattern[
 		led_scanout < 3
-		? (timer[15:1] % (15'd10 * (3 - led_scanout)))
-		: (score % (15'd10 * (6 - led_scanout)))
+		? (timer[15:1] % (15'd10 ** (3 - led_scanout)))
+		: (score % (15'd10 ** (6 - led_scanout)))
 	];
 
 	row = cnt_scan[15:13];

@@ -36,10 +36,23 @@ reg [25:0] cnt_scan = 0;
 reg clk_500ms;
 reg [2:0] row;
 
+reg [7:0] led_pattern [9:0];
+
 initial begin
 	snake[0] = 7'b1_000_000;
 	apple = 6'b011_100;  // initial apple at row 3, column 4
 	random = 8'd234;
+
+	led_pattern[0] = 8'b11111100;
+	led_pattern[1] = 8'b01100000;
+	led_pattern[2] = 8'b11011010;
+	led_pattern[3] = 8'b11110010;
+	led_pattern[4] = 8'b01100110;
+	led_pattern[5] = 8'b10110110;
+	led_pattern[6] = 8'b10111110;
+	led_pattern[7] = 8'b11100000;
+	led_pattern[8] = 8'b11111110;
+	led_pattern[9] = 8'b11110110;
 end
 
 always @(posedge clk) begin
@@ -55,6 +68,7 @@ always @(posedge clk_500ms or negedge reset) begin
 	if (!reset) begin
 		snake[0] = 7'b1_000_000;
 		dire = 2'd0;
+		timer = 0;
 		score = 0;
 		// TODO: reset
 	end else begin
@@ -152,46 +166,18 @@ reg [7:0] i;
 always @(cnt_scan[15:13]) begin
 	// led
 	led_scanout = cnt_scan[15:13];
-	case (led_scanout < 3 ? (timer[15:1] % (15'd10 * (3 - led_scanout))) : (score % (15'd10 * (6 - led_scanout))))
-		4'd0: begin
-			led_segout = 8'b11111100;
-		end
-		4'd1: begin
-			led_segout = 8'b01100000;
-		end
-		4'd2: begin
-			led_segout = 8'b11011010;
-		end
-		4'd3: begin
-			led_segout = 8'b11110010;
-		end
-		4'd4: begin
-			led_segout = 8'b01100110;
-		end
-		4'd5: begin
-			led_segout = 8'b10110110;
-		end
-		4'd6: begin
-			led_segout = 8'b10111110;
-		end
-		4'd7: begin
-			led_segout = 8'b11100000;
-		end
-		4'd8: begin
-			led_segout = 8'b11111110;
-		end
-		4'd9: begin
-			led_segout = 8'b11110110;
-		end
-		default: begin
-			led_segout = 8'b00000000;  // blank
-		end
-	endcase
+	led_segout = led_pattern[
+		led_scanout < 3
+		? (timer[15:1] % (15'd10 * (3 - led_scanout)))
+		: (score % (15'd10 * (6 - led_scanout)))
+	];
 
 	row = cnt_scan[15:13];
 	matrix_scanout = 8'b00000001 << row;
 	matrix_segout_r = 8'b00000000;
 	matrix_segout_g = 8'b00000000;
+
+	// show snake
 	if (snake[0][5:3] == row) begin
 		matrix_segout_r = matrix_segout_r | 8'b00000001 << snake[0][2:0];
 	end

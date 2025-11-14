@@ -30,6 +30,7 @@ reg [7:0] snake_on_map [7:0];
 reg [7:0] snake_length;
 
 reg [7:0] random;
+reg [25:0] seed;
 reg [5:0] apple;
 
 reg [25:0] cnt_scan = 0;
@@ -47,7 +48,6 @@ initial begin
 	dire= 2'd0;
 	snake[0] = 6'b000_000;
 	snake_length = 8'd1;
-	random = 8'd234;
 	apple = 6'b011_100;  // initial apple at row 3, column 4
 
 	led_pattern[0] = 8'b11111100;
@@ -78,7 +78,6 @@ always @(posedge clk_500ms or negedge reset) begin
 		dire= 2'd0;
 		snake[0] = 6'b000_000;
 		snake_length = 8'd1;
-		random = 8'd234;
 		apple = 6'b011_100;  // initial apple at row 3, column 4
 	end else begin
 		timer = timer + 16'd01;
@@ -143,7 +142,6 @@ always @(posedge clk_500ms or negedge reset) begin
 			dire= 2'd0;
 			snake[0] = 6'b000_000;
 			snake_length = 8'd1;
-			random = 8'd234;
 			apple = 6'b011_100;
 		end else begin
 			snake_on_map[snake[0][5:3]] = snake_on_map[snake[0][5:3]] | 8'b00000001 << snake[0][2:0];
@@ -156,6 +154,7 @@ always @(posedge clk_500ms or negedge reset) begin
 				snake_on_map[snake[snake_length - 1][5:3]] = snake_on_map[snake[snake_length - 1][5:3]] | 8'b00000001 << snake[snake_length - 1][2:0];
 
 				// gen apple
+				random = seed;
 				if (random == 8'b0) begin
 					random = 8'd234;
 				end
@@ -177,6 +176,7 @@ always @(posedge clk_500ms or negedge reset) begin
 end
 
 always @(negedge reset or negedge arrow_up or negedge arrow_down or posedge arrow_left or posedge arrow_right) begin
+	seed = seed ^ cnt_scan;
 	if (!reset) begin
 		arrow = 2'd0;
 	end else if (!arrow_up) begin

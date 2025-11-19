@@ -198,11 +198,26 @@ always @(cnt_scan[15:13]) begin
 	// led
 	if (cnt_scan[15:13] < 3'd6) begin
 		led_scanout = cnt_scan[15:13];
-		led_segout = led_pattern[
-			led_scanout < 3
-			? ((timer[15:1] / (15'd10 ** (2 - led_scanout))) % 10)
-			: ((score / (15'd10 ** (5 - led_scanout))) % 10)
-		];
+		case (led_scanout)
+			3'd0: begin
+				led_segout = led_pattern[timer[15:1] % 10];
+			end
+			3'd1: begin
+				led_segout = led_pattern[(timer[15:1] / 15'd10) % 10];
+			end
+			3'd2: begin
+				led_segout = led_pattern[(timer[15:1] / 15'd100) % 10];
+			end
+			3'd3: begin
+				led_segout = led_pattern[score % 10];
+			end
+			3'd4: begin
+				led_segout = led_pattern[(score / 15'd10) % 10];
+			end
+			3'd5: begin
+				led_segout = led_pattern[(score / 15'd100) % 10];
+			end
+		endcase
 	end else begin
 		led_scanout = 3'b0;
 		led_segout = 8'b0;

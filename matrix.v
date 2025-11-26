@@ -322,9 +322,11 @@ always @(posedge clk_500ms or negedge reset) begin
 				if (snake_length >= 8'd64) begin
 					stage = 8'd2;
 				end else begin
-					// graw the snake
-					snake_length = snake_length + 1;
-					snake_on_map[snake[snake_length - 1][5:3]] = snake_on_map[snake[snake_length - 1][5:3]] | 8'b00000001 << snake[snake_length - 1][2:0];
+					// NOTE: if i use blocking = (snake_length <= snake_length + 1;) it will failed to compile
+					// use non-blocking <= and increase snake_length afterward
+
+					// grow the snake
+					snake_on_map[snake[snake_length][5:3]] = snake_on_map[snake[snake_length][5:3]] | 8'b00000001 << snake[snake_length][2:0];
 
 					// gen apple
 					random = seed;
@@ -332,7 +334,7 @@ always @(posedge clk_500ms or negedge reset) begin
 						random = 8'd234;
 					end
 					random = random ^ (random << 12) ^ (random >> 7) ^ (random << 3);
-					random_a = random % (64 - snake_length) + 1;
+					random_a = random % (64 - snake_length - 1) + 1;
 
 					for (i = 0; i < 64; i = i + 1) begin
 						if (random_a != 8'b0 && (snake_on_map[i / 8] & 8'b01 << (i & 8'b0111 /* i % 8*/)) == 8'b0) begin
@@ -344,6 +346,8 @@ always @(posedge clk_500ms or negedge reset) begin
 							end
 						end
 					end
+
+					snake_length <= snake_length + 1;
 				end
 			end
 		end
@@ -381,40 +385,40 @@ always @(stage) begin
 		if (timer & 16'b1111_1111_1110_0000 != 16'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
-				result_matrix_r[i] = result_matrix_r[i] & (matrix_number_partten[timer[12:9]][i] << (48 - result_matrix_length));
+				result_matrix_r[i] = result_matrix_r[i] & (matrix_number_partten[timer[12:9]][i - 1] << (48 - result_matrix_length));
 			end
 		end
 		if (timer & 16'b1111_1111_1111_1000 != 16'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
-				result_matrix_r[i] = result_matrix_r[i] & (matrix_number_partten[timer[8:5]][i] << (48 - result_matrix_length));
+				result_matrix_r[i] = result_matrix_r[i] & (matrix_number_partten[timer[8:5]][i - 1] << (48 - result_matrix_length));
 			end
 		end
 		result_matrix_length = result_matrix_length + 8'd4;
 		for (i = 1; i < 7; i = i + 1) begin
-			result_matrix_r[i] = result_matrix_r[i] & (matrix_number_partten[timer[4:1]][i] << (48 - result_matrix_length));
+			result_matrix_r[i] = result_matrix_r[i] & (matrix_number_partten[timer[4:1]][i - 1] << (48 - result_matrix_length));
 		end
 		result_matrix_length = result_matrix_length + 8'd5;
 		for (i = 1; i < 7; i = i + 1) begin
-			result_matrix_r[i] = result_matrix_r[i] & (matrix_s_partten[i] << (48 - result_matrix_length));
+			result_matrix_r[i] = result_matrix_r[i] & (matrix_s_partten[i - 1] << (48 - result_matrix_length));
 		end
 
 		result_matrix_length = result_matrix_length + 8'd4;
 		if (score & 16'b1111_1111_1111_0000 != 16'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
-				result_matrix_r[i] = result_matrix_r[i] & (matrix_number_partten[score[11:8]][i] << (48 - result_matrix_length));
+				result_matrix_r[i] = result_matrix_r[i] & (matrix_number_partten[score[11:8]][i - 1] << (48 - result_matrix_length));
 			end
 		end
 		if (timer & 16'b1111_1111_1111_1100 != 16'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
-				result_matrix_r[i] = result_matrix_r[i] & (matrix_number_partten[score[7:4]][i] << (48 - result_matrix_length));
+				result_matrix_r[i] = result_matrix_r[i] & (matrix_number_partten[score[7:4]][i - 1] << (48 - result_matrix_length));
 			end
 		end
 		result_matrix_length = result_matrix_length + 8'd4;
 		for (i = 1; i < 7; i = i + 1) begin
-			result_matrix_r[i] = result_matrix_r[i] & (matrix_number_partten[score[3:0]][i] << (48 - result_matrix_length));
+			result_matrix_r[i] = result_matrix_r[i] & (matrix_number_partten[score[3:0]][i - 1] << (48 - result_matrix_length));
 		end
 		for (i = 1; i < 7; i = i + 1) begin
 			result_matrix_g[i] = result_matrix_r[i];
@@ -422,8 +426,8 @@ always @(stage) begin
 
 		result_matrix_length = result_matrix_length + 8'd7;
 		for (i = 1; i < 7; i = i + 1) begin
-			result_matrix_r[i] = result_matrix_r[i] & (matrix_apple_partten_r[i] << (48 - result_matrix_length));
-			result_matrix_g[i] = result_matrix_g[i] & (matrix_apple_partten_g[i] << (48 - result_matrix_length));
+			result_matrix_r[i] = result_matrix_r[i] & (matrix_apple_partten_r[i - 1] << (48 - result_matrix_length));
+			result_matrix_g[i] = result_matrix_g[i] & (matrix_apple_partten_g[i - 1] << (48 - result_matrix_length));
 		end
 
 		result_matrix_length = result_matrix_length + 8'd2;

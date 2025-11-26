@@ -440,22 +440,22 @@ always @(cnt_scan[15:13]) begin
 		led_scanout = cnt_scan[15:13];
 		case (led_scanout)
 			3'd0: begin
-				led_segout = led_pattern[timer[4:1]];
+				led_segout = led_pattern[timer[12:9]];
 			end
 			3'd1: begin
 				led_segout = led_pattern[timer[8:5]];
 			end
 			3'd2: begin
-				led_segout = led_pattern[timer[12:9]];
+				led_segout = led_pattern[timer[4:1]];
 			end
 			3'd3: begin
-				led_segout = led_pattern[score[3:0]];
+				led_segout = led_pattern[score[11:8]];
 			end
 			3'd4: begin
 				led_segout = led_pattern[score[7:4]];
 			end
 			3'd5: begin
-				led_segout = led_pattern[score[11:8]];
+				led_segout = led_pattern[score[3:0]];
 			end
 		endcase
 	end else begin
@@ -485,16 +485,16 @@ always @(cnt_scan[15:13]) begin
 			matrix_segout_r = lose_matrix_start_r[row] >> (8'd24 - roll);
 			matrix_segout_g = lose_matrix_start_g[row] >> (8'd24 - roll);
 			if (roll > 8'd24) begin
-				matrix_segout_r = result_matrix_r[row] >> (8'd80 - roll);
-				matrix_segout_g = result_matrix_g[row] >> (8'd80 - roll);
+				matrix_segout_r = matrix_segout_r | result_matrix_r[row] >> (8'd80 - roll);
+				matrix_segout_g = matrix_segout_r | result_matrix_g[row] >> (8'd80 - roll);
 			end
 		end
 		8'd2: begin
 			matrix_segout_r = win_matrix_start_r[row] >> (8'd24 - roll);
 			matrix_segout_g = win_matrix_start_g[row] >> (8'd24 - roll);
 			if (roll > 8'd24) begin
-				matrix_segout_r = result_matrix_r[row] >> (8'd80 - roll);
-				matrix_segout_g = result_matrix_g[row] >> (8'd80 - roll);
+				matrix_segout_r = matrix_segout_r | result_matrix_r[row] >> (8'd80 - roll);
+				matrix_segout_g = matrix_segout_g | result_matrix_g[row] >> (8'd80 - roll);
 			end
 		end
 	endcase

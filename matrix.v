@@ -220,17 +220,17 @@ always @(posedge clk_500ms or negedge reset) begin
 	if (!reset) begin
 		timer = 16'd0;
 		score = 16'd0;
-		stage = 8'd0;
-		roll = 8'd0;
-		dire= 2'd0;
+		stage <= 8'd0;
+		roll <= 8'd0;
+		dire <= 2'd0;
 		snake[0] = 6'b000_000;
-		snake_length = 8'd1;
-		apple = 6'b011_100;  // initial apple at row 3, column 4
+		snake_length <= 8'd1;
+		apple <= 6'b011_100;  // initial apple at row 3, column 4
 	end else if (stage != 8'd0) begin
 		if (roll > 8'd80) begin
-			roll = 8'd0;
+			roll <= 8'd0;
 		end else begin
-			roll = roll + 1;
+			roll <= roll + 1;
 		end
 	end else begin
 		timer = timer + 16'd01;
@@ -254,7 +254,7 @@ always @(posedge clk_500ms or negedge reset) begin
 		end
 
 		// move head
-		dire = arrow;
+		dire <= arrow;
 		case (arrow)
 			2'd0: begin
 				if (snake[0][5:3] == 0) begin
@@ -293,18 +293,18 @@ always @(posedge clk_500ms or negedge reset) begin
 
 		for (i = 1; i < 64; i = i + 1) begin
 			if (i < snake_length) begin
-				snake_on_map[snake[i][5:3]] = snake_on_map[snake[i][5:3]] | 8'b00000001 << snake[i][2:0];
+				snake_on_map[snake[i][5:3]] = snake_on_map[snake[i][5:3]] | 8'b10000000 >> snake[i][2:0];
 			end
 		end
 		// check if head is on the body
-		if (snake_on_map[snake[0][5:3]] & 8'b00000001 << snake[0][2:0] != 8'b0) begin
+		if (snake_on_map[snake[0][5:3]] & 8'b10000000 >> snake[0][2:0] != 8'b0) begin
 			// the snake's head hit body
 			// TODO: i just reset everything for now, maybe we can
 			// add some cool effect and then reset
 
-			stage = 8'd1;
+			stage <= 8'd1;
 		end else begin
-			snake_on_map[snake[0][5:3]] = snake_on_map[snake[0][5:3]] | 8'b00000001 << snake[0][2:0];
+			snake_on_map[snake[0][5:3]] = snake_on_map[snake[0][5:3]] | 8'b10000000 >> snake[0][2:0];
 
 			if (snake[0][5:0] == apple[5:0]) begin
 				score = score + 1;
@@ -320,13 +320,13 @@ always @(posedge clk_500ms or negedge reset) begin
 				end
 				
 				if (snake_length >= 8'd64) begin
-					stage = 8'd2;
+					stage <= 8'd2;
 				end else begin
 					// NOTE: if i use blocking = (snake_length <= snake_length + 1;) it will failed to compile
 					// use non-blocking <= and increase snake_length afterward
 
 					// grow the snake
-					snake_on_map[snake[snake_length][5:3]] = snake_on_map[snake[snake_length][5:3]] | 8'b00000001 << snake[snake_length][2:0];
+					snake_on_map[snake[snake_length][5:3]] = snake_on_map[snake[snake_length][5:3]] | 8'b10000000 >> snake[snake_length][2:0];
 
 					// gen apple
 					random = seed;
@@ -340,7 +340,7 @@ always @(posedge clk_500ms or negedge reset) begin
 						if (random_a != 8'b0 && (snake_on_map[i / 8] & 8'b01 << (i & 8'b0111 /* i % 8*/)) == 8'b0) begin
 							random_a = random_a - 1;
 							if (random_a == 8'b0) begin
-								apple[5:0] = i[5:0];
+								apple[5:0] <= i[5:0];
 								// apple[5:3] = i / 8;  // random row (0-7)
 								// apple[2:0] = i % 8;  // random column (0-7)
 							end
@@ -472,13 +472,13 @@ always @(cnt_scan[15:13]) begin
 		8'd0: begin
 			// show snake
 			if (snake[0][5:3] == row) begin
-				matrix_segout_r = matrix_segout_r | 8'b00000001 << snake[0][2:0];
+				matrix_segout_r = matrix_segout_r | 8'b10000000 >> snake[0][2:0];
 			end
 			matrix_segout_g = snake_on_map[row];
 
 			// show apple
 			if (row == apple[5:3]) begin
-				matrix_segout_r = matrix_segout_r | 8'b00000001 << apple[2:0];
+				matrix_segout_r = matrix_segout_r | 8'b10000000 >> apple[2:0];
 			end
 		end
 		8'd1: begin

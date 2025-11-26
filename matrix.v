@@ -322,14 +322,14 @@ always @(posedge clk_500ms or negedge reset) begin
 				if (snake_length >= 8'd64) begin
 					stage <= 8'd2;
 				end else begin
-					// NOTE: if i use blocking = (snake_length <= snake_length + 1;) it will failed to compile
+					// NOTE: if i use blocking = (snake_length = snake_length + 1;) it will failed to compile
 					// use non-blocking <= and increase snake_length afterward
 
 					// grow the snake
 					snake_on_map[snake[snake_length][5:3]] = snake_on_map[snake[snake_length][5:3]] | 8'b10000000 >> snake[snake_length][2:0];
 
 					// gen apple
-					random = seed;
+					random = random ^ seed;
 					if (random == 8'b0) begin
 						random = 8'd234;
 					end
@@ -355,21 +355,21 @@ always @(posedge clk_500ms or negedge reset) begin
 end
 
 always @(negedge reset or negedge arrow_up or negedge arrow_down or posedge arrow_left or posedge arrow_right) begin
-	seed = seed ^ cnt_scan;
+	seed <= seed ^ cnt_scan;
 	if (!reset) begin
-		arrow = 2'd0;
+		arrow <= 2'd0;
 	end else if (!arrow_up) begin
 		if (dire != 2'd1)
-			arrow = 2'd0;
+			arrow <= 2'd0;
 	end else if (!arrow_down) begin
 		if (dire != 2'd0)
-			arrow = 2'd1;
+			arrow <= 2'd1;
 	end else if (arrow_left) begin
 		if (dire != 2'd3)
-			arrow = 2'd2;
+			arrow <= 2'd2;
 	end else if (arrow_right) begin
 		if (dire != 2'd2)
-			arrow = 2'd3;
+			arrow <= 2'd3;
 	end
 end
 
@@ -437,42 +437,44 @@ end
 always @(cnt_scan[15:13]) begin
 	// led
 	if (cnt_scan[15:13] < 3'd6) begin
-		led_scanout = cnt_scan[15:13];
-		case (led_scanout)
-			3'd0: begin
-				led_segout = led_pattern[timer[12:9]];
-			end
-			3'd1: begin
-				led_segout = led_pattern[timer[8:5]];
-			end
-			3'd2: begin
-				led_segout = led_pattern[timer[4:1]];
-			end
-			3'd3: begin
-				led_segout = led_pattern[score[11:8]];
-			end
-			3'd4: begin
-				led_segout = led_pattern[score[7:4]];
-			end
-			3'd5: begin
-				led_segout = led_pattern[score[3:0]];
-			end
-		endcase
+		led_scanout <= cnt_scan[15:13];
 	end else begin
-		led_scanout = 3'b0;
-		led_segout = 8'b0;
+		led_scanout <= 3'b0;
 	end
+	case (cnt_scan[15:13])
+		3'd0: begin
+			led_segout <= led_pattern[timer[12:9]];
+		end
+		3'd1: begin
+			led_segout <= led_pattern[timer[8:5]];
+		end
+		3'd2: begin
+			led_segout <= led_pattern[timer[4:1]];
+		end
+		3'd3: begin
+			led_segout <= led_pattern[score[11:8]];
+		end
+		3'd4: begin
+			led_segout <= led_pattern[score[7:4]];
+		end
+		3'd5: begin
+			led_segout <= led_pattern[score[3:0]];
+		end
+		default: begin
+			led_segout <= 8'b0;
+		end
+	endcase
 
 	row = cnt_scan[15:13];
-	matrix_scanout = 8'b00000001 << row;
-	matrix_segout_r = 8'b00000000;
-	matrix_segout_g = 8'b00000000;
+	matrix_scanout <= 8'b00000001 << row;
 
 	case (stage)
 		8'd0: begin
 			// show snake
 			if (snake[0][5:3] == row) begin
-				matrix_segout_r = matrix_segout_r | 8'b10000000 >> snake[0][2:0];
+				matrix_segout_r = 8'b10000000 >> snake[0][2:0];
+			end else begin
+				matrix_segout_r = 8'b00000000;
 			end
 			matrix_segout_g = snake_on_map[row];
 

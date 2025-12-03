@@ -1,6 +1,7 @@
 module matrix (
 	clk,
 	reset,
+	test,
 	arrow_up,
 	arrow_down,
 	arrow_left,
@@ -12,7 +13,7 @@ module matrix (
 	matrix_scanout,
 );
 
-input clk, reset;
+input clk, reset, test;
 input arrow_up, arrow_down, arrow_left, arrow_right;
 output reg [7:0] led_segout;
 output reg [2:0] led_scanout;
@@ -216,7 +217,7 @@ always @(posedge clk) begin
 end
 
 reg[7:0] random_a;
-always @(posedge clk_500ms or negedge reset) begin
+always @(posedge clk_500ms or negedge reset or negedge test) begin
 	if (!reset) begin
 		timer = 16'd0;
 		score = 16'd0;
@@ -226,6 +227,8 @@ always @(posedge clk_500ms or negedge reset) begin
 		snake[0] = 6'b000_000;
 		snake_length <= 8'd1;
 		apple <= 6'b011_100;  // initial apple at row 3, column 4
+	end else if (!test) begin
+		stage <= 8'd2;
 	end else if (stage != 8'd0) begin
 		if (roll > 8'd80) begin
 			roll <= 8'd0;

@@ -71,7 +71,7 @@ initial begin
 	snake_length = 8'd1;
 	apple = 6'b011_100;  // initial apple at row 3, column 4
 	result_matrix_length = 8'd0;
-	roll = 8'd0;
+	roll = 8'd8;
 
 	led_pattern[0] = 8'b11111100;
 	led_pattern[1] = 8'b01100000;
@@ -499,8 +499,8 @@ always @(cnt_scan[15:13]) begin
 				matrix_segout_r = lose_matrix_start_r[row] << (roll - 8'd32);
 				matrix_segout_g = lose_matrix_start_g[row] << (roll - 8'd32);
 			end
-			matrix_segout_r = matrix_segout_r | result_matrix_r[row] >> (result_matrix_length + 8'd32 - roll);
-			matrix_segout_g = matrix_segout_g | result_matrix_g[row] >> (result_matrix_length + 8'd32 - roll);
+			matrix_segout_r = matrix_segout_r | result_matrix_r[row] >> (8'd48 + 8'd32 - roll);
+			matrix_segout_g = matrix_segout_g | result_matrix_g[row] >> (8'd48 + 8'd32 - roll);
 
 			if (roll < 8'd8) begin
 				matrix_segout_r = matrix_segout_r | (result_matrix_r[row] >> (8'd48 - result_matrix_length)) << roll;
@@ -515,8 +515,8 @@ always @(cnt_scan[15:13]) begin
 				matrix_segout_r = win_matrix_start_r[row] << (roll - 8'd32);
 				matrix_segout_g = win_matrix_start_g[row] << (roll - 8'd32);
 			end
-			matrix_segout_r = matrix_segout_r | result_matrix_r[row] >> (result_matrix_length + 8'd32 - roll);
-			matrix_segout_g = matrix_segout_g | result_matrix_g[row] >> (result_matrix_length + 8'd32 - roll);
+			matrix_segout_r = matrix_segout_r | result_matrix_r[row] >> (8'd48 + 8'd32 - roll);
+			matrix_segout_g = matrix_segout_g | result_matrix_g[row] >> (8'd48 + 8'd32 - roll);
 
 			if (roll < 8'd8) begin
 				matrix_segout_r = matrix_segout_r | (result_matrix_r[row] >> (8'd48 - result_matrix_length)) << roll;

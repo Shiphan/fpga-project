@@ -38,7 +38,7 @@ reg [7:0] random;
 reg [25:0] seed;
 reg [5:0] apple;
 
-reg [25:0] cnt_scan = 0;
+reg [25:0] cnt_scan;
 reg clk_500ms;
 reg [2:0] row;
 
@@ -62,6 +62,7 @@ reg [7:0] roll;
 reg [7:0] i;
 
 initial begin
+	cnt_scan = 26'd0;
 	timer = 16'd0;
 	score = 16'd0;
 	stage = 8'd0;
@@ -304,7 +305,7 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 			end
 		end
 		// check if head is on the body
-		if (snake_on_map[snake[0][5:3]] & 8'b10000000 >> snake[0][2:0] != 8'b0) begin
+		if ((snake_on_map[snake[0][5:3]] & (8'b10000000 >> snake[0][2:0])) != 8'b0) begin
 			// the snake's head hit body
 			// TODO: i just reset everything for now, maybe we can
 			// add some cool effect and then reset
@@ -336,7 +337,7 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 					snake_on_map[snake[snake_length][5:3]] = snake_on_map[snake[snake_length][5:3]] | 8'b10000000 >> snake[snake_length][2:0];
 
 					// gen apple
-					random = random ^ seed;
+					random = random ^ seed[7:0];
 					if (random == 8'b0) begin
 						random = 8'd234;
 					end
@@ -344,7 +345,7 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 					random_a = random % (64 - snake_length - 1) + 1;
 
 					for (i = 0; i < 64; i = i + 1) begin
-						if (random_a != 8'b0 && (snake_on_map[i / 8] & 8'b01 << (i & 8'b0111 /* i % 8*/)) == 8'b0) begin
+						if (random_a != 8'b0 && (snake_on_map[i / 8] & (8'b01 << (i & 8'b0111 /* i % 8*/))) == 8'b0) begin
 							random_a = random_a - 1;
 							if (random_a == 8'b0) begin
 								apple[5:0] <= i[5:0];
@@ -390,13 +391,13 @@ always @(stage) begin
 		result_matrix_length = 8'd0;
 
 		result_matrix_length = result_matrix_length + 8'd2;
-		if (timer & 16'b1111_1111_1110_0000 != 16'b0) begin
+		if ((timer & 16'b1111_1111_1110_0000) != 16'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[timer[12:9]][i - 1] << (48 - result_matrix_length));
 			end
 		end
-		if (timer & 16'b1111_1111_1111_1000 != 16'b0) begin
+		if ((timer & 16'b1111_1111_1111_1000) != 16'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[timer[8:5]][i - 1] << (48 - result_matrix_length));
@@ -412,13 +413,13 @@ always @(stage) begin
 		end
 
 		result_matrix_length = result_matrix_length + 8'd4;
-		if (score & 16'b1111_1111_1111_0000 != 16'b0) begin
+		if ((score & 16'b1111_1111_1111_0000) != 16'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[score[11:8]][i - 1] << (48 - result_matrix_length));
 			end
 		end
-		if (score & 16'b1111_1111_1111_1100 != 16'b0) begin
+		if ((score & 16'b1111_1111_1111_1100) != 16'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[score[7:4]][i - 1] << (48 - result_matrix_length));

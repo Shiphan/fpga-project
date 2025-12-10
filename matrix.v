@@ -488,22 +488,22 @@ always @(cnt_scan[15:13]) begin
 		end
 		8'd1: begin
 			if (roll <= 8'd24) begin
-				matrix_segout_r = matrix_segout_r | lose_matrix_start_r[row] >> (8'd24 - roll);
-				matrix_segout_g = matrix_segout_g | lose_matrix_start_g[row] >> (8'd24 - roll);
+				matrix_segout_r = lose_matrix_start_r[row] >> (8'd24 - roll);
+				matrix_segout_g = lose_matrix_start_g[row] >> (8'd24 - roll);
 			end else begin
-				matrix_segout_r = matrix_segout_r | lose_matrix_start_r[row] << (roll - 8'd24);
-				matrix_segout_g = matrix_segout_g | lose_matrix_start_g[row] << (roll - 8'd24);
+				matrix_segout_r = lose_matrix_start_r[row] << (roll - 8'd24);
+				matrix_segout_g = lose_matrix_start_g[row] << (roll - 8'd24);
 			end
 			matrix_segout_r = matrix_segout_r | result_matrix_r[row] >> (result_matrix_length - 8'd8 - roll);
 			matrix_segout_g = matrix_segout_g | result_matrix_g[row] >> (result_matrix_length - 8'd8 - roll);
 		end
 		8'd2: begin
 			if (roll <= 8'd24) begin
-				matrix_segout_r = matrix_segout_r | win_matrix_start_r[row] >> (8'd24 - roll);
-				matrix_segout_g = matrix_segout_g | win_matrix_start_g[row] >> (8'd24 - roll);
+				matrix_segout_r = win_matrix_start_r[row] >> (8'd24 - roll);
+				matrix_segout_g = win_matrix_start_g[row] >> (8'd24 - roll);
 			end else begin
-				matrix_segout_r = matrix_segout_r | win_matrix_start_r[row] << (roll - 8'd24);
-				matrix_segout_g = matrix_segout_g | win_matrix_start_g[row] << (roll - 8'd24);
+				matrix_segout_r = win_matrix_start_r[row] << (roll - 8'd24);
+				matrix_segout_g = win_matrix_start_g[row] << (roll - 8'd24);
 			end
 			matrix_segout_r = matrix_segout_r | result_matrix_r[row] >> (result_matrix_length - 8'd8 - roll);
 			matrix_segout_g = matrix_segout_g | result_matrix_g[row] >> (result_matrix_length - 8'd8 - roll);

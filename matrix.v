@@ -234,7 +234,7 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 	end else if (!test) begin
 		stage <= 8'd2;
 	end else if (stage != 8'd0) begin
-		if (roll > (8'd32 + result_matrix_length)) begin
+		if (roll >= (8'd32 + result_matrix_length - 8'd1)) begin
 			roll <= 8'd0;
 		end else begin
 			roll <= roll + 1;
@@ -386,7 +386,7 @@ always @(stage) begin
 			result_matrix_r[i] = 48'b0;
 			result_matrix_g[i] = 48'b0;
 		end
-		result_matrix_r[0] = 48'hFFFF_FFFF_FFFF;
+		// result_matrix_r[0] = 48'hFFFF_FFFF_FFFF;
 		result_matrix_length = 8'd0;
 
 		result_matrix_length = result_matrix_length + 8'd2;
@@ -508,7 +508,7 @@ always @(cnt_scan[15:13]) begin
 			end
 		end
 		8'd2: begin
-			if (roll <= 8'd24) begin
+			if (roll <= 8'd32) begin
 				matrix_segout_r = win_matrix_start_r[row] >> (8'd32 - roll);
 				matrix_segout_g = win_matrix_start_g[row] >> (8'd32 - roll);
 			end else begin

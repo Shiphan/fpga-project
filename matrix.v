@@ -62,6 +62,7 @@ reg [7:0] i;
 initial begin
 	timer = 16'd0;
 	score = 16'd0;
+	stage = 8'd0;
 	arrow = 2'd0;
 	dire = 2'd1;
 	snake[0] = 6'b000_000;
@@ -494,8 +495,8 @@ always @(cnt_scan[15:13]) begin
 				matrix_segout_r = lose_matrix_start_r[row] << (roll - 8'd24);
 				matrix_segout_g = lose_matrix_start_g[row] << (roll - 8'd24);
 			end
-			matrix_segout_r = matrix_segout_r | result_matrix_r[row] >> (result_matrix_length - 8'd8 - roll);
-			matrix_segout_g = matrix_segout_g | result_matrix_g[row] >> (result_matrix_length - 8'd8 - roll);
+			matrix_segout_r = matrix_segout_r | result_matrix_r[row] >> (result_matrix_length + 8'd32 - roll);
+			matrix_segout_g = matrix_segout_g | result_matrix_g[row] >> (result_matrix_length + 8'd32 - roll);
 		end
 		8'd2: begin
 			if (roll <= 8'd24) begin
@@ -505,8 +506,8 @@ always @(cnt_scan[15:13]) begin
 				matrix_segout_r = win_matrix_start_r[row] << (roll - 8'd24);
 				matrix_segout_g = win_matrix_start_g[row] << (roll - 8'd24);
 			end
-			matrix_segout_r = matrix_segout_r | result_matrix_r[row] >> (result_matrix_length - 8'd8 - roll);
-			matrix_segout_g = matrix_segout_g | result_matrix_g[row] >> (result_matrix_length - 8'd8 - roll);
+			matrix_segout_r = matrix_segout_r | result_matrix_r[row] >> (result_matrix_length + 8'd32 - roll);
+			matrix_segout_g = matrix_segout_g | result_matrix_g[row] >> (result_matrix_length + 8'd32 - roll);
 		end
 	endcase
 end

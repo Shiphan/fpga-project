@@ -72,7 +72,7 @@ reg [7:0] roll;
 reg [7:0] i;
 
 // Music 2
-wire [5:0] playIndex;
+wire [5:0] note_index;
 wire [14:0] tone;
 
 initial begin
@@ -588,8 +588,8 @@ always @(cnt_scan[15:13]) begin
 	endcase
 end
 
-autoPlay play(reset, clk, playIndex);
-toneTable toneOut(playIndex, tone);
+autoPlay play(reset, clk, note_index);
+toneTable toneOut(note_index, tone);
 toneOut speeker(clk, tone, buzzer);
 
 endmodule

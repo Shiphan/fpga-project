@@ -59,6 +59,10 @@ reg [4:0] matrix_apple_partten_g [5:0];
 
 reg [7:0] roll;
 
+// Music
+reg [15:0] feq;
+reg [31:0] cnt_buzzer;
+
 reg [7:0] i;
 
 initial begin
@@ -73,6 +77,8 @@ initial begin
 	apple = 6'b011_100;  // initial apple at row 3, column 4
 	result_matrix_length = 8'd0;
 	roll = 8'd8;
+
+	feq = 16'd200;
 
 	led_pattern[0] = 8'b11111100;
 	led_pattern[1] = 8'b01100000;
@@ -218,6 +224,15 @@ always @(posedge clk) begin
 	if (cnt_scan == 5_000_000) begin
 		cnt_scan <= 0;
 		clk_500ms <= ~clk_500ms;
+	end
+end
+
+always @(posedge clk) begin
+	if (cnt_buzzer >= (10_000_000 / feq)) begin
+		cnt_scan <= 0;
+		buzzer <= ~buzzer;
+	end else begin
+		cnt_buzzer <= cnt_buzzer + 1;
 	end
 end
 

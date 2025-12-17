@@ -299,7 +299,9 @@ always @(posedge clk_1000ms or negedge reset) begin
 	end
 end
 
-reg[7:0] random_a;
+// reg[7:0] random_a;
+reg apple_placed;
+reg [5:0] position;
 always @(posedge clk_500ms or negedge reset or negedge test) begin
 	if (!reset) begin
 		score = 12'd0;
@@ -394,11 +396,9 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 				if (snake_length >= 8'd64) begin
 					stage <= 2'd2;
 				end else begin
-					// NOTE: if i use blocking = (snake_length = snake_length + 1;) it will failed to compile
-					// use non-blocking <= and increase snake_length afterward
-
 					// grow the snake
 					snake_on_map[snake[snake_length][5:3]] = snake_on_map[snake[snake_length][5:3]] | 8'b10000000 >> snake[snake_length][2:0];
+					snake_length <= snake_length + 8'd1;
 
 					// gen apple
 					random = random ^ seed;
@@ -406,20 +406,28 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 						random = 8'd234;
 					end
 					random = random ^ (random << 12) ^ (random >> 7) ^ (random << 3);
-					random_a = random % (64 - snake_length - 1) + 1;
-
+					
+					apple_placed = 0;
 					for (i = 0; i < 64; i = i + 1) begin
-						if (random_a != 8'b0 && (snake_on_map[i / 8] & (8'b01 << (i & 8'b0111 /* i % 8*/))) == 8'b0) begin
-							random_a = random_a - 1;
-							if (random_a == 8'b0) begin
-								apple[5:0] <= i[5:0];
-								// apple[5:3] = i / 8;  // random row (0-7)
-								// apple[2:0] = i % 8;  // random column (0-7)
-							end
+						position = random + i * 39;
+						if (!apple_placed && (snake_on_map[position[5:3]] & (8'b01 << position[2:0])) == 8'b0) begin
+							apple_placed = 1;
+							apple[5:0] <= position;
 						end
 					end
 
-					snake_length <= snake_length + 8'd1;
+					// TODO: i think this will be more randomized, but it seems to take too much hardware resources
+					// random_a = random % (64 - snake_length - 1) + 1;
+					// for (i = 0; i < 64; i = i + 1) begin
+					// 	if (random_a != 8'b0 && (snake_on_map[i / 8] & (8'b01 << (i & 8'b0111 /* i % 8*/))) == 8'b0) begin
+					// 		random_a = random_a - 1;
+					// 		if (random_a == 8'b0) begin
+					// 			apple[5:0] <= i[5:0];
+					// 			// apple[5:3] = i / 8;  // random row (0-7)
+					// 			// apple[2:0] = i % 8;  // random column (0-7)
+					// 		end
+					// 	end
+					// end
 				end
 			end
 		end

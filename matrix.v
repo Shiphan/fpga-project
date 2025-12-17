@@ -6,6 +6,7 @@ module matrix (
 	arrow_down,
 	arrow_left,
 	arrow_right,
+	music_enable,
 	led_segout,
 	led_scanout,
 	matrix_segout_r,
@@ -14,7 +15,7 @@ module matrix (
 	buzzer,
 );
 
-input clk, reset, test;
+input clk, reset, test, music_enable;
 input arrow_up, arrow_down, arrow_left, arrow_right;
 output reg [7:0] led_segout;
 output reg [2:0] led_scanout;
@@ -590,6 +591,6 @@ end
 
 autoPlay play(reset, clk, note_index);
 toneTable toneOut(note_index, tone);
-toneOut speeker(clk, tone, buzzer);
+toneOut speeker(clk, tone, buzzer, music_enable);
 
 endmodule

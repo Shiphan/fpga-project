@@ -23,10 +23,10 @@ output reg [7:0] matrix_segout_g;
 output reg [7:0] matrix_scanout;
 output reg buzzer;
 
-reg [15:0] timer;
-reg [15:0] score;
+reg [11:0] timer;
+reg [11:0] score;
 
-reg [7:0] stage;
+reg [1:0] stage;
 
 reg [1:0] arrow;
 reg [1:0] dire;
@@ -35,11 +35,13 @@ reg [7:0] snake_on_map [7:0];
 reg [7:0] snake_length;
 
 reg [7:0] random;
-reg [25:0] seed;
+reg [7:0] seed;
 reg [5:0] apple;
 
 reg [25:0] cnt_scan;
+reg [25:0] cnt_1s;
 reg clk_500ms;
+reg clk_1000ms;
 reg [2:0] row;
 
 reg [7:0] led_pattern [9:0];
@@ -71,9 +73,9 @@ reg [7:0] i;
 
 initial begin
 	cnt_scan = 26'd0;
-	timer = 16'd0;
-	score = 16'd0;
-	stage = 8'd0;
+	timer = 12'd0;
+	score = 12'd0;
+	stage = 2'd0;
 	arrow = 2'd0;
 	dire = 2'd1;
 	snake[0] = 6'b000_000;
@@ -241,6 +243,13 @@ always @(posedge clk) begin
 		clk_500ms <= ~clk_500ms;
 	end
 
+	if (cnt_scan >= 10_000_000) begin
+		cnt_scan <= 0;
+		clk_1000ms <= ~clk_1000ms;
+	end else begin
+		cnt_scan <= cnt_scan + 1;
+	end
+
 	cnt_beat <= cnt_beat + 1;
 	if (cnt_scan == 2_500_000) begin
 		cnt_beat <= 0;
@@ -265,39 +274,43 @@ always @(beat) begin
 	feq <= sheet[beat];
 end
 
+always @(posedge clk_1000ms or negedge reset) begin
+	if (!reset) begin
+		timer <= 12'd0;
+	end else if (stage == 2'd0) begin
+		timer = timer + 1;
+		// packed decimal
+		if (timer[3:0] > 4'd9) begin
+			timer = timer + 12'h6;
+		end
+		if (timer[7:4] > 4'd9) begin
+			timer = timer + 12'h60;
+		end
+		if (timer[11:8] > 4'd9) begin
+			timer = timer + 12'h600;
+		end
+	end
+end
+
 reg[7:0] random_a;
 always @(posedge clk_500ms or negedge reset or negedge test) begin
 	if (!reset) begin
-		timer = 16'd0;
-		score = 16'd0;
-		stage <= 8'd0;
+		score = 12'd0;
+		stage <= 2'd0;
 		roll <= 8'd8;
 		dire <= 2'd1;
 		snake[0] = 6'b000_000;
 		snake_length <= 8'd1;
 		apple <= 6'b011_100;  // initial apple at row 3, column 4
 	end else if (!test) begin
-		stage <= 8'd2;
-	end else if (stage != 8'd0) begin
+		stage <= 2'd2;
+	end else if (stage != 2'd0) begin
 		if (roll >= (8'd32 + result_matrix_length - 8'd1)) begin
 			roll <= 8'd0;
 		end else begin
 			roll <= roll + 1;
 		end
 	end else begin
-		timer = timer + 16'd01;
-		if (timer[0] == 1'b0) begin
-			// packed decimal
-			if (timer[4:1] > 4'd9) begin
-				timer = timer + (16'h6 << 1);
-			end
-			if (timer[8:5] > 4'd9) begin
-				timer = timer + (16'h60 << 1);
-			end
-			if (timer[12:9] > 4'd9) begin
-				timer = timer + (16'h600 << 1);
-			end
-		end
 		// 500ms
 
 		// move body
@@ -354,7 +367,7 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 			// TODO: i just reset everything for now, maybe we can
 			// add some cool effect and then reset
 
-			stage <= 8'd1;
+			stage <= 2'd1;
 		end else begin
 			snake_on_map[snake[0][5:3]] = snake_on_map[snake[0][5:3]] | 8'b10000000 >> snake[0][2:0];
 
@@ -362,17 +375,17 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 				score = score + 1;
 				// packed decimal
 				if (score[3:0] > 4'd9) begin
-					score = score + 16'h6;
+					score = score + 12'h6;
 				end
 				if (score[7:4] > 4'd9) begin
-					score = score + 16'h60;
+					score = score + 12'h60;
 				end
 				if (score[11:8] > 4'd9) begin
-					score = score + 16'h600;
+					score = score + 12'h600;
 				end
 				
 				if (snake_length >= 8'd64) begin
-					stage <= 8'd2;
+					stage <= 2'd2;
 				end else begin
 					// NOTE: if i use blocking = (snake_length = snake_length + 1;) it will failed to compile
 					// use non-blocking <= and increase snake_length afterward
@@ -381,7 +394,7 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 					snake_on_map[snake[snake_length][5:3]] = snake_on_map[snake[snake_length][5:3]] | 8'b10000000 >> snake[snake_length][2:0];
 
 					// gen apple
-					random = random ^ seed[7:0];
+					random = random ^ seed;
 					if (random == 8'b0) begin
 						random = 8'd234;
 					end
@@ -426,7 +439,7 @@ always @(negedge reset or negedge arrow_up or negedge arrow_down or posedge arro
 end
 
 always @(stage) begin
-	if (stage != 8'd0) begin
+	if (stage != 2'd0) begin
 		for (i = 0; i < 8; i = i + 1) begin
 			result_matrix_r[i] = 48'b0;
 			result_matrix_g[i] = 48'b0;
@@ -435,21 +448,21 @@ always @(stage) begin
 		result_matrix_length = 8'd0;
 
 		result_matrix_length = result_matrix_length + 8'd2;
-		if ((timer & 16'b1111_1111_1110_0000) != 16'b0) begin
+		if ((timer & 12'b1111_1110_0000) != 16'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
-				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[timer[12:9]][i - 1] << (48 - result_matrix_length));
+				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[timer[11:8]][i - 1] << (48 - result_matrix_length));
 			end
 		end
-		if ((timer & 16'b1111_1111_1111_1000) != 16'b0) begin
+		if ((timer & 12'b1111_1111_1000) != 16'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
-				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[timer[8:5]][i - 1] << (48 - result_matrix_length));
+				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[timer[7:4]][i - 1] << (48 - result_matrix_length));
 			end
 		end
 		result_matrix_length = result_matrix_length + 8'd4;
 		for (i = 1; i < 7; i = i + 1) begin
-			result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[timer[4:1]][i - 1] << (48 - result_matrix_length));
+			result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[timer[3:0]][i - 1] << (48 - result_matrix_length));
 		end
 		result_matrix_length = result_matrix_length + 8'd5;
 		for (i = 1; i < 7; i = i + 1) begin
@@ -457,13 +470,13 @@ always @(stage) begin
 		end
 
 		result_matrix_length = result_matrix_length + 8'd4;
-		if ((score & 16'b1111_1111_1111_0000) != 16'b0) begin
+		if ((score & 12'b1111_1111_0000) != 16'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[score[11:8]][i - 1] << (48 - result_matrix_length));
 			end
 		end
-		if ((score & 16'b1111_1111_1111_1100) != 16'b0) begin
+		if ((score & 12'b1111_1111_1100) != 16'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[score[7:4]][i - 1] << (48 - result_matrix_length));
@@ -496,13 +509,13 @@ always @(cnt_scan[15:13]) begin
 	end
 	case (cnt_scan[15:13])
 		3'd0: begin
-			led_segout <= led_pattern[timer[12:9]];
+			led_segout <= led_pattern[timer[11:8]];
 		end
 		3'd1: begin
-			led_segout <= led_pattern[timer[8:5]];
+			led_segout <= led_pattern[timer[7:4]];
 		end
 		3'd2: begin
-			led_segout <= led_pattern[timer[4:1]];
+			led_segout <= led_pattern[timer[3:0]];
 		end
 		3'd3: begin
 			led_segout <= led_pattern[score[11:8]];
@@ -522,7 +535,7 @@ always @(cnt_scan[15:13]) begin
 	matrix_scanout <= 8'b00000001 << row;
 
 	case (stage)
-		8'd0: begin
+		2'd0: begin
 			// show snake
 			if (snake[0][5:3] == row) begin
 				matrix_segout_r = 8'b10000000 >> snake[0][2:0];
@@ -536,7 +549,7 @@ always @(cnt_scan[15:13]) begin
 				matrix_segout_r = matrix_segout_r | 8'b10000000 >> apple[2:0];
 			end
 		end
-		8'd1: begin
+		2'd1: begin
 			if (roll <= 8'd32) begin
 				matrix_segout_r = lose_matrix_start_r[row] >> (8'd32 - roll);
 				matrix_segout_g = lose_matrix_start_g[row] >> (8'd32 - roll);
@@ -552,7 +565,7 @@ always @(cnt_scan[15:13]) begin
 				matrix_segout_g = matrix_segout_g | (result_matrix_g[row] >> (8'd48 - result_matrix_length)) << roll;
 			end
 		end
-		8'd2: begin
+		2'd2: begin
 			if (roll <= 8'd32) begin
 				matrix_segout_r = win_matrix_start_r[row] >> (8'd32 - roll);
 				matrix_segout_g = win_matrix_start_g[row] >> (8'd32 - roll);

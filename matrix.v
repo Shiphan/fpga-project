@@ -78,6 +78,7 @@ wire [14:0] tone;
 
 initial begin
 	cnt_scan = 26'd0;
+	cnt_1s = 26'd0;
 	timer = 12'd0;
 	score = 12'd0;
 	stage = 2'd0;
@@ -242,17 +243,18 @@ initial begin
 end
 
 always @(posedge clk) begin
-	cnt_scan <= cnt_scan + 1;
-	if (cnt_scan == 5_000_000) begin
+	if (cnt_scan >= 5_000_000) begin
 		cnt_scan <= 0;
 		clk_500ms <= ~clk_500ms;
-	end
-
-	if (cnt_scan >= 10_000_000) begin
-		cnt_scan <= 0;
-		clk_1000ms <= ~clk_1000ms;
 	end else begin
 		cnt_scan <= cnt_scan + 1;
+	end
+
+	if (cnt_1s >= 10_000_000) begin
+		cnt_1s <= 0;
+		clk_1000ms <= ~clk_1000ms;
+	end else begin
+		cnt_1s <= cnt_1s + 1;
 	end
 
 	// cnt_beat <= cnt_beat + 1;
@@ -425,7 +427,7 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 end
 
 always @(negedge reset or negedge arrow_up or negedge arrow_down or posedge arrow_left or posedge arrow_right) begin
-	seed <= seed ^ cnt_scan;
+	seed <= seed ^ cnt_scan[7:0];
 	if (!reset) begin
 		arrow <= 2'd1;
 	end else if (!arrow_up) begin

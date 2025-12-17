@@ -62,6 +62,10 @@ reg [7:0] roll;
 // Music
 reg [15:0] feq;
 reg [31:0] cnt_buzzer;
+reg [31:0] cnt_beat;
+reg [15:0] beat;
+
+reg [15:0] sheet [31:0];
 
 reg [7:0] i;
 
@@ -90,6 +94,17 @@ initial begin
 	led_pattern[7] = 8'b11100000;
 	led_pattern[8] = 8'b11111110;
 	led_pattern[9] = 8'b11110110;
+
+	sheet[0] = 597;
+	sheet[1] = 563;
+	sheet[2] = 563;
+	sheet[3] = 532;
+	sheet[4] = 502;
+	sheet[5] = 502;
+	sheet[6] = 474;
+	sheet[7] = 447;
+	sheet[8] = 422;
+	sheet[9] = 422;
 
 	win_matrix_start_r[0] = 32'b00000000_00000000_00000000_00000000;
 	win_matrix_start_r[1] = 32'b00001001_00000000_00000000_00010100;
@@ -225,15 +240,29 @@ always @(posedge clk) begin
 		cnt_scan <= 0;
 		clk_500ms <= ~clk_500ms;
 	end
+
+	cnt_beat <= cnt_beat + 1;
+	if (cnt_scan == 2_500_000) begin
+		cnt_beat <= 0;
+		if (beat < 16'd9) begin
+			beat <= beat + 1;
+		end else begin
+			beat <= 0;
+		end
+	end
 end
 
 always @(posedge clk) begin
 	if (cnt_buzzer >= (10_000_000 / feq)) begin
-		cnt_scan <= 0;
+		cnt_buzzer <= 0;
 		buzzer <= ~buzzer;
 	end else begin
 		cnt_buzzer <= cnt_buzzer + 1;
 	end
+end
+
+always @(beat) begin
+	feq <= sheet[beat];
 end
 
 reg[7:0] random_a;

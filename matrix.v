@@ -310,6 +310,9 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 		dire <= 2'd1;
 		snake[0] = 6'b000_000;
 		snake_length <= 8'd1;
+		for (i = 0; i < 8; i = i + 1) begin
+			snake_on_map[i] = 8'b0;
+		end
 		apple <= 6'b011_100;  // initial apple at row 3, column 4
 	end else if (!test) begin
 		stage <= 2'd2;
@@ -360,16 +363,18 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 			end
 		endcase
 
-		// reset snake_on_map
-		for (i = 0; i < 8; i = i + 1) begin
-			snake_on_map[i] = 8'b0;
-		end
+		snake_on_map[snake[snake_length][5:3]] = snake_on_map[snake[snake_length][5:3]] & ~(8'b10000000 >> snake[snake_length][2:0]);
 
-		for (i = 1; i < 64; i = i + 1) begin
-			if (i < snake_length) begin
-				snake_on_map[snake[i][5:3]] = snake_on_map[snake[i][5:3]] | 8'b10000000 >> snake[i][2:0];
-			end
-		end
+		// reset snake_on_map
+		// for (i = 0; i < 8; i = i + 1) begin
+		// 	snake_on_map[i] = 8'b0;
+		// end
+		// for (i = 1; i < 64; i = i + 1) begin
+		// 	if (i < snake_length) begin
+		// 		snake_on_map[snake[i][5:3]] = snake_on_map[snake[i][5:3]] | 8'b10000000 >> snake[i][2:0];
+		// 	end
+		// end
+
 		// check if head is on the body
 		if ((snake_on_map[snake[0][5:3]] & (8'b10000000 >> snake[0][2:0])) != 8'b0) begin
 			// the snake's head hit body

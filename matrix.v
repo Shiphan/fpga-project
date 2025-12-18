@@ -468,13 +468,13 @@ always @(stage) begin
 		result_matrix_length = 8'd0;
 
 		result_matrix_length = result_matrix_length + 8'd2;
-		if ((timer & 12'b1111_1110_0000) != 16'b0) begin
+		if ((timer & 12'b1111_1111_0000) != 12'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[timer[11:8]][i - 1] << (48 - result_matrix_length));
 			end
 		end
-		if ((timer & 12'b1111_1111_1000) != 16'b0) begin
+		if ((timer & 12'b1111_1111_0000) != 12'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[timer[7:4]][i - 1] << (48 - result_matrix_length));
@@ -490,13 +490,13 @@ always @(stage) begin
 		end
 
 		result_matrix_length = result_matrix_length + 8'd4;
-		if ((score & 12'b1111_1111_0000) != 16'b0) begin
+		if ((score & 12'b1111_1111_0000) != 12'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[score[11:8]][i - 1] << (48 - result_matrix_length));
 			end
 		end
-		if ((score & 12'b1111_1111_1100) != 16'b0) begin
+		if ((score & 12'b1111_1111_1100) != 12'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[score[7:4]][i - 1] << (48 - result_matrix_length));

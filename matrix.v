@@ -438,7 +438,7 @@ always @(posedge clk_var or negedge reset or negedge test) begin
 					apple_placed = 0;
 					for (i = 0; i < 64; i = i + 1) begin
 						position = random + i * 39;
-						if (!apple_placed && (snake_on_map[position[5:3]] & (8'b01 << position[2:0])) == 8'b0) begin
+						if (!apple_placed && (snake_on_map[position[5:3]] & (8'b10000000 >> position[2:0])) == 8'b0) begin
 							apple_placed = 1;
 							apple <= position;
 						end
@@ -595,7 +595,7 @@ always @(cnt_scan[15:13]) begin
 				matrix_segout_r = 8'b00000000;
 			end
 			if (animation_progress < snake_length && row == snake[animation_progress][5:3]) begin
-				matrix_segout_g = snake_on_map[row] & ~(8'b00000001 << snake[animation_progress][2:0]);
+				matrix_segout_g = snake_on_map[row] & ~(8'b10000000 >> snake[animation_progress][2:0]);
 			end else begin
 				matrix_segout_g = snake_on_map[row];
 			end
@@ -636,6 +636,10 @@ always @(cnt_scan[15:13]) begin
 				matrix_segout_r = matrix_segout_r | (result_matrix_r[row] >> (8'd48 - result_matrix_length)) << roll;
 				matrix_segout_g = matrix_segout_g | (result_matrix_g[row] >> (8'd48 - result_matrix_length)) << roll;
 			end
+		end
+		default: begin
+			matrix_segout_r = 8'd0;
+			matrix_segout_g = 8'd0;
 		end
 	endcase
 end

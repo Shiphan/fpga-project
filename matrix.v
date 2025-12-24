@@ -265,7 +265,7 @@ always @(posedge clk) begin
 		cnt_1s <= cnt_1s + 1;
 	end
 
-	if (cnt_animation >= 250_000) begin
+	if (cnt_animation >= 750_000) begin
 		cnt_animation <= 0;
 		clk_animation <= ~clk_animation;
 	end else begin
@@ -499,7 +499,7 @@ always @(negedge reset or negedge arrow_up or negedge arrow_down or posedge arro
 	end
 end
 
-always @(animation_trigger or clk_animation) begin
+always @(posedge clk_animation) begin
 	if (animation_trigger != animation_trigger_old) begin
 		animation_trigger_old <= animation_trigger;
 		animation_progress <= 0;
@@ -613,15 +613,16 @@ always @(cnt_scan[15:13]) begin
 				matrix_segout_r = 8'b00000000;
 			end
 
+			if (animation_progress < snake_length && row == snake[animation_progress][5:3]) begin
+				matrix_segout_r = matrix_segout_r | (8'b10000000 >> snake[animation_progress][2:0]);
+			end
+
+			matrix_segout_g = snake_on_map[row];
 			// if (animation_progress < snake_length && row == snake[animation_progress][5:3]) begin
 			// 	matrix_segout_g = snake_on_map[row] & ~(8'b10000000 >> snake[animation_progress][2:0]);
 			// end else begin
 			// 	matrix_segout_g = snake_on_map[row];
 			// end
-
-			if (animation_progress < snake_length && row == snake[animation_progress][5:3]) begin
-				matrix_segout_r = matrix_segout_r | (8'b10000000 >> snake[animation_progress][2:0]);
-			end
 
 			// show apple
 			if (row == apple[5:3]) begin

@@ -640,7 +640,7 @@ always @(cnt_scan[15:13]) begin
 	endcase
 end
 
-autoPlay play(reset, clk, note_index);
+autoPlay play(reset, clk, note_index, stage);
 toneTable toneOut(note_index, tone);
 toneOut speeker(clk, tone, buzzer, music_enable);
 

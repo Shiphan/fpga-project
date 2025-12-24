@@ -41,8 +41,11 @@ reg [5:0] apple;
 
 reg [25:0] cnt_scan;
 reg [25:0] cnt_1s;
-reg clk_500ms;
+reg [25:0] cnt_animation;
+reg [25:0] speed_var;
+reg clk_var;
 reg clk_1000ms;
+reg clk_animation;
 reg [2:0] row;
 
 reg [7:0] led_pattern [9:0];
@@ -61,6 +64,10 @@ reg [4:0] matrix_apple_partten_r [5:0];
 reg [4:0] matrix_apple_partten_g [5:0];
 
 reg [7:0] roll;
+
+reg animation_trigger;
+reg animation_trigger_old;
+reg animation_progress;
 
 // Music
 // reg [15:0] feq;
@@ -89,6 +96,7 @@ initial begin
 	apple = 6'b011_100;  // initial apple at row 3, column 4
 	result_matrix_length = 8'd0;
 	roll = 8'd8;
+	speed_var = 26'd2_500_000;
 
 	// feq = 16'd200;
 
@@ -243,18 +251,25 @@ initial begin
 end
 
 always @(posedge clk) begin
-	if (cnt_scan >= 5_000_000) begin
+	if (cnt_scan >= speed_var) begin
 		cnt_scan <= 0;
-		clk_500ms <= ~clk_500ms;
+		clk_var <= ~clk_var;
 	end else begin
 		cnt_scan <= cnt_scan + 1;
 	end
 
-	if (cnt_1s >= 10_000_000) begin
+	if (cnt_1s >= 5_000_000) begin
 		cnt_1s <= 0;
 		clk_1000ms <= ~clk_1000ms;
 	end else begin
 		cnt_1s <= cnt_1s + 1;
+	end
+
+	if (cnt_animation >= 250_000) begin
+		cnt_animation <= 0;
+		clk_animation <= ~clk_animation;
+	end else begin
+		cnt_animation <= cnt_animation + 1;
 	end
 
 	// cnt_beat <= cnt_beat + 1;
@@ -302,8 +317,9 @@ end
 // reg[7:0] random_a;
 reg apple_placed;
 reg [5:0] position;
-always @(posedge clk_500ms or negedge reset or negedge test) begin
+always @(posedge clk_var or negedge reset or negedge test) begin
 	if (!reset) begin
+		speed_var = 26'd2_500_000;
 		score = 12'd0;
 		stage <= 2'd0;
 		roll <= 8'd8;
@@ -331,8 +347,8 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 		end
 
 		// move head
-		dire <= arrow;
-		case (arrow)
+		dire = arrow;
+		case (dire)
 			2'd0: begin
 				if (snake[0][5:3] == 0) begin
 					snake[0] = snake[0] | 6'b111_000;
@@ -386,6 +402,10 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 			snake_on_map[snake[0][5:3]] = snake_on_map[snake[0][5:3]] | 8'b10000000 >> snake[0][2:0];
 
 			if (snake[0][5:0] == apple[5:0]) begin
+				if (speed_var >= 26'd500_000) begin
+					speed_var <= speed_var - 26'd100_000;
+				end
+
 				score = score + 1;
 				// packed decimal
 				if (score[3:0] > 4'd9) begin
@@ -405,6 +425,9 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 					snake_on_map[snake[snake_length][5:3]] = snake_on_map[snake[snake_length][5:3]] | 8'b10000000 >> snake[snake_length][2:0];
 					snake_length <= snake_length + 8'd1;
 
+					// trigger animation
+					animation_trigger <= ~animation_trigger;
+
 					// gen apple
 					random = random ^ seed;
 					if (random == 8'b0) begin
@@ -417,7 +440,7 @@ always @(posedge clk_500ms or negedge reset or negedge test) begin
 						position = random + i * 39;
 						if (!apple_placed && (snake_on_map[position[5:3]] & (8'b01 << position[2:0])) == 8'b0) begin
 							apple_placed = 1;
-							apple[5:0] <= position;
+							apple <= position;
 						end
 					end
 
@@ -455,6 +478,15 @@ always @(negedge reset or negedge arrow_up or negedge arrow_down or posedge arro
 	end else if (arrow_right) begin
 		if (dire != 2'd2)
 			arrow <= 2'd3;
+	end
+end
+
+always @(animation_trigger or clk_animation) begin
+	if (animation_trigger != animation_trigger_old) begin
+		animation_trigger_old <= animation_trigger;
+		animation_progress <= 0;
+	end else if (animation_progress <= 8'd255) begin
+		animation_progress <= animation_progress + 8'd1;
 	end
 end
 
@@ -562,7 +594,11 @@ always @(cnt_scan[15:13]) begin
 			end else begin
 				matrix_segout_r = 8'b00000000;
 			end
-			matrix_segout_g = snake_on_map[row];
+			if (animation_progress < snake_length && row == snake[animation_progress][5:3]) begin
+				matrix_segout_g = snake_on_map[row] & ~(8'b00000001 << snake[animation_progress][2:0]);
+			end else begin
+				matrix_segout_g = snake_on_map[row];
+			end
 
 			// show apple
 			if (row == apple[5:3]) begin

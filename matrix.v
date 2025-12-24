@@ -67,7 +67,7 @@ reg [7:0] roll;
 
 reg animation_trigger;
 reg animation_trigger_old;
-reg animation_progress;
+reg [7:0] animation_progress;
 
 // Music
 // reg [15:0] feq;

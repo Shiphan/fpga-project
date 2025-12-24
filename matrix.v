@@ -347,7 +347,29 @@ always @(posedge clk_var or negedge reset or negedge test) begin
 		end
 
 		// move head
-		dire = arrow;
+		case (dire)
+			2'd0: begin
+				if (arrow != 2'd1) begin
+					dire = arrow;
+				end
+			end
+			2'd1: begin
+				if (arrow != 2'd0) begin
+					dire = arrow;
+				end
+			end
+			2'd2: begin
+				if (arrow != 2'd3) begin
+					dire = arrow;
+				end
+			end
+			2'd3: begin
+				if (arrow != 2'd2) begin
+					dire = arrow;
+				end
+			end
+		endcase
+		
 		case (dire)
 			2'd0: begin
 				if (snake[0][5:3] == 0) begin
@@ -467,17 +489,13 @@ always @(negedge reset or negedge arrow_up or negedge arrow_down or posedge arro
 	if (!reset) begin
 		arrow <= 2'd1;
 	end else if (!arrow_up) begin
-		if (dire != 2'd1)
-			arrow <= 2'd0;
+		arrow <= 2'd0;
 	end else if (!arrow_down) begin
-		if (dire != 2'd0)
-			arrow <= 2'd1;
+		arrow <= 2'd1;
 	end else if (arrow_left) begin
-		if (dire != 2'd3)
-			arrow <= 2'd2;
+		arrow <= 2'd2;
 	end else if (arrow_right) begin
-		if (dire != 2'd2)
-			arrow <= 2'd3;
+		arrow <= 2'd3;
 	end
 end
 

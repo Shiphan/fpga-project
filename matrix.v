@@ -612,10 +612,15 @@ always @(cnt_scan[15:13]) begin
 			end else begin
 				matrix_segout_r = 8'b00000000;
 			end
+
+			// if (animation_progress < snake_length && row == snake[animation_progress][5:3]) begin
+			// 	matrix_segout_g = snake_on_map[row] & ~(8'b10000000 >> snake[animation_progress][2:0]);
+			// end else begin
+			// 	matrix_segout_g = snake_on_map[row];
+			// end
+
 			if (animation_progress < snake_length && row == snake[animation_progress][5:3]) begin
-				matrix_segout_g = snake_on_map[row] & ~(8'b10000000 >> snake[animation_progress][2:0]);
-			end else begin
-				matrix_segout_g = snake_on_map[row];
+				matrix_segout_r = matrix_segout_r | (8'b10000000 >> snake[animation_progress][2:0]);
 			end
 
 			// show apple

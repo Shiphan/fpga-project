@@ -265,7 +265,7 @@ always @(posedge clk) begin
 		cnt_1s <= cnt_1s + 1;
 	end
 
-	if (cnt_animation >= 750_000) begin
+	if (cnt_animation >= 250_000) begin
 		cnt_animation <= 0;
 		clk_animation <= ~clk_animation;
 	end else begin

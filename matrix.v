@@ -329,7 +329,18 @@ always @(posedge clk_var or negedge reset or negedge test) begin
 		for (i = 0; i < 8; i = i + 1) begin
 			snake_on_map[i] = 8'b0;
 		end
-		apple <= 6'b011_100;  // initial apple at row 3, column 4
+		// initial apple
+		random = random ^ seed;
+		if (random == 8'b0) begin
+			random = 8'd234;
+		end
+		random = random ^ (random << 12) ^ (random >> 7) ^ (random << 3);
+		
+		if (random[5:0] == 6'b0) begin
+			apple <= 6'b011_100;
+		end else begin
+			apple <= random[5:0];
+		end
 	end else if (!test) begin
 		stage <= 2'd2;
 	end else if (stage != 2'd0) begin

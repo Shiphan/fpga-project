@@ -520,7 +520,7 @@ always @(stage) begin
 		result_matrix_length = 8'd0;
 
 		result_matrix_length = result_matrix_length + 8'd2;
-		if ((timer & 12'b1111_1111_0000) != 12'b0) begin
+		if ((timer & 12'b1111_0000_0000) != 12'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[timer[11:8]][i - 1] << (48 - result_matrix_length));
@@ -542,13 +542,13 @@ always @(stage) begin
 		end
 
 		result_matrix_length = result_matrix_length + 8'd4;
-		if ((score & 12'b1111_1111_0000) != 12'b0) begin
+		if ((score & 12'b1111_0000_0000) != 12'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[score[11:8]][i - 1] << (48 - result_matrix_length));
 			end
 		end
-		if ((score & 12'b1111_1111_1100) != 12'b0) begin
+		if ((score & 12'b1111_1111_0000) != 12'b0) begin
 			result_matrix_length = result_matrix_length + 8'd4;
 			for (i = 1; i < 7; i = i + 1) begin
 				result_matrix_r[i] = result_matrix_r[i] | (matrix_number_partten[score[7:4]][i - 1] << (48 - result_matrix_length));
@@ -581,19 +581,35 @@ always @(cnt_scan[15:13]) begin
 	end
 	case (cnt_scan[15:13])
 		3'd0: begin
-			led_segout <= led_pattern[timer[11:8]];
+			if ((timer & 12'b1111_0000_0000) != 12'b0) begin
+				led_segout <= led_pattern[timer[11:8]];
+			end else begin
+				led_segout <= 8'b0;
+			end
 		end
 		3'd1: begin
-			led_segout <= led_pattern[timer[7:4]];
+			if ((timer & 12'b1111_1111_0000) != 12'b0) begin
+				led_segout <= led_pattern[timer[7:4]];
+			end else begin
+				led_segout <= 8'b0;
+			end
 		end
 		3'd2: begin
 			led_segout <= led_pattern[timer[3:0]];
 		end
 		3'd3: begin
-			led_segout <= led_pattern[score[11:8]];
+			if ((score & 12'b1111_0000_0000) != 12'b0) begin
+				led_segout <= led_pattern[score[11:8]];
+			end else begin
+				led_segout <= 8'b0;
+			end
 		end
 		3'd4: begin
-			led_segout <= led_pattern[score[7:4]];
+			if ((score & 12'b1111_1111_0000) != 12'b0) begin
+				led_segout <= led_pattern[score[7:4]];
+			end else begin
+				led_segout <= 8'b0;
+			end
 		end
 		3'd5: begin
 			led_segout <= led_pattern[score[3:0]];

@@ -420,6 +420,7 @@ always @(posedge clk_var or negedge reset or negedge test) begin
 			// add some cool effect and then reset
 
 			stage <= 2'd1;
+			speed_var <= 26'd1_000_000;
 		end else begin
 			snake_on_map[snake[0][5:3]] = snake_on_map[snake[0][5:3]] | 8'b10000000 >> snake[0][2:0];
 
@@ -442,6 +443,7 @@ always @(posedge clk_var or negedge reset or negedge test) begin
 				
 				if (snake_length >= 8'd64) begin
 					stage <= 2'd2;
+					speed_var <= 26'd1_000_000;
 				end else begin
 					// grow the snake
 					snake_on_map[snake[snake_length][5:3]] = snake_on_map[snake[snake_length][5:3]] | 8'b10000000 >> snake[snake_length][2:0];
